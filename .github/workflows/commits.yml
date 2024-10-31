@@ -2,11 +2,10 @@ name: Commits Syntax Checker
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
     types: [opened, reopened, edited, review_requested, synchronize]
   push:
-    branches:
-      - "main"
+    branches: [main, develop]
   workflow_call:
 
 jobs:
@@ -16,3 +15,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: webiny/action-conventional-commits@v1.0.3
+        with:
+          allowed-commit-types: "feat,fix,docs,test,build,ci,perf,refactor,style,chore,revert"
