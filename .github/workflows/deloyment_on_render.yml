@@ -3,6 +3,7 @@ name: Deploy on Render
 on:
   pull_request:
     branches: [main]
+    types: [opened, reopened, synchronize]
   push:
     tags:
       - '*'
