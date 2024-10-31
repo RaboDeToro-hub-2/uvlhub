@@ -1,0 +1,25 @@
+name: Deploy on Render
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    tags:
+      - '*'
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/tags/*' && 'production' || github.head_ref == 'refs/heads/main' && 'development' || 'staging' }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Render
+      env:
+        deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      run: |
+        curl "$deploy_url"
+
