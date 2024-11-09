@@ -16,6 +16,7 @@ from flask import (
     make_response,
     abort,
     url_for,
+    send_file
 )
 from flask_login import login_required, current_user
 
@@ -175,6 +176,14 @@ def delete():
 
     return jsonify({"error": "Error: File not found"})
 
+@dataset_bp.route("/dataset/download/all", methods = ["GET"])
+def download_all():
+    download = dataset_service.download_all_datasets()
+    date = datetime.now().strftime("%d/%m/%Y")
+    name = f"datasets_from_{date}.zip"
+    
+    return send_file(download, as_attachment = True, download_name = name)
+    
 
 @dataset_bp.route("/dataset/download/<int:dataset_id>", methods=["GET"])
 def download_dataset(dataset_id):
