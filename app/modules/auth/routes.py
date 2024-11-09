@@ -53,3 +53,8 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('public.index'))
+
+@auth_bp.route('/login-with-github', methods=['GET', 'POST'])
+def login_with_github():
+    return redirect(url_for('public.index'))
+
