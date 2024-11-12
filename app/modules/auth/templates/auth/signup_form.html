@@ -103,7 +103,13 @@
                     </div>
 
                 </div>
-
+                <div class="row">
+                    <div class="col-auto mt-3">
+                        <a class="oauth-button" href="{{ url_for('auth.login_with_github') }}">
+                            <img id="login-github" src="{{ url_for('static', filename='img/logos/github-mark.svg') }}" alt="Login with GitHub"></img>
+                        </a>
+                    </div>                           
+                </div>
             </form>
 
         </div>
