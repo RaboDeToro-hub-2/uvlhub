@@ -107,7 +107,7 @@ class AuthenticationService(BaseService):
         user = self.repository.get_by_email(email)
         if user is None:
             # Generate a random password. It should be notified to the user
-            password = User.generate_password() 
+            password = User.generate_password()
             user = self.create_with_profile(
                 email=email,
                 password=password,
