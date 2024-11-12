@@ -1,6 +1,8 @@
 from flask import render_template, redirect, url_for, request
 from flask_login import current_user, login_user, logout_user
 
+from  authlib.integrations.base_client.errors import MismatchingStateError
+
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
 from app.modules.auth.services import AuthenticationService
@@ -54,7 +56,25 @@ def logout():
     logout_user()
     return redirect(url_for('public.index'))
 
-@auth_bp.route('/login-with-github', methods=['GET', 'POST'])
+@auth_bp.route('/login-with-github', methods=['GET'])
 def login_with_github():
-    return redirect(url_for('public.index'))
+    return authentication_service.github.authorize_redirect(callback=url_for('auth.login_with_github_authorized', _external=True))
 
+@auth_bp.route('/login-with-github/authorized', methods=['GET'])
+def login_with_github_authorized():
+    try:
+        token = authentication_service.github.authorize_access_token()
+    except MismatchingStateError as e:
+        return render_template('400.html')
+    
+    if token is None:
+       error = 'Access token not provided'
+       return render_template("auth/login_form.html", form=form, error=error)
+    
+    user_info = authentication_service.github.get('user').json()
+    user, error =  authentication_service.login_from_github(user_info)
+    if user is not None:
+        return redirect(url_for('public.index'))
+    
+    form = LoginForm()
+    return render_template("auth/login_form.html", form=form, error=error)
