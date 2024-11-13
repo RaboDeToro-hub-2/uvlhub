@@ -16,6 +16,7 @@ class User(db.Model, UserMixin):
 
     data_sets = db.relationship('DataSet', backref='user', lazy=True)
     profile = db.relationship('UserProfile', backref='user', uselist=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
 
     communities = db.relationship('Community', secondary=community_members, back_populates='members')
 
@@ -36,3 +37,7 @@ class User(db.Model, UserMixin):
     def temp_folder(self) -> str:
         from app.modules.auth.services import AuthenticationService
         return AuthenticationService().temp_folder_by_user(self)
+
+    def generate_password() -> str:
+        import secrets
+        return secrets.token_urlsafe(16)

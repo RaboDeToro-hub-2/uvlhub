@@ -1,5 +1,7 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, flash, url_for, request
 from flask_login import current_user, login_user, logout_user
+
+from authlib.integrations.base_client.errors import MismatchingStateError
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
@@ -24,11 +26,12 @@ def show_signup_form():
 
         try:
             user = authentication_service.create_with_profile(**form.data)
+            authentication_service.send_confirmation_email(user.email)
+            flash("Email confirmation", "info")
+
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f'Error creating user: {exc}')
 
-        # Log user
-        login_user(user, remember=True)
         return redirect(url_for('public.index'))
 
     return render_template("auth/signup_form.html", form=form)
@@ -53,3 +56,41 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('public.index'))
+
+
+@auth_bp.route("/confirm_user/<token>", methods=["GET"])
+def confirm_user(token):
+    try:
+        user = authentication_service.confirm_user_with_token(token)
+    except Exception as exc:
+        flash(exc.args[0], "danger")
+        return redirect(url_for("auth.show_signup_form"))
+
+    login_user(user, remember=True)
+    return redirect(url_for('public.index'))
+
+
+@auth_bp.route('/login-with-github', methods=['GET'])
+def login_with_github():
+    callback = url_for('auth.login_with_github_authorized', _external=True)
+    return authentication_service.github.authorize_redirect(callback)
+
+
+@auth_bp.route('/login-with-github/authorized', methods=['GET'])
+def login_with_github_authorized():
+    try:
+        token = authentication_service.github.authorize_access_token()
+    except MismatchingStateError:
+        return render_template('400.html')
+
+    form = LoginForm()
+    if token is None:
+        error = 'Access token not provided'
+        return render_template("auth/login_form.html", form=form, error=error)
+
+    user_info = authentication_service.github.get('user').json()
+    user, error = authentication_service.login_from_github(user_info)
+    if user is not None:
+        return redirect(url_for('public.index'))
+
+    return render_template("auth/login_form.html", form=form, error=error)
