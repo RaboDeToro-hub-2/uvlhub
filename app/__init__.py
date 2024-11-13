@@ -31,10 +31,6 @@ def create_app(config_name='development'):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.modules.community.models import Community
-    from app.modules.community.routes import community_bp
-    app.register_blueprint(community_bp, url_prefix='/community', name='unique_community')
-
     # Register modules
     module_manager = ModuleManager(app)
     module_manager.register_modules()
