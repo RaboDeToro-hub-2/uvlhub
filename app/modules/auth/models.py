@@ -18,6 +18,7 @@ class User(db.Model, UserMixin):
     profile = db.relationship('UserProfile', backref='user', uselist=False)
 
     communities = db.relationship('Community', secondary=community_members, back_populates='members')
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if 'password' in kwargs:
