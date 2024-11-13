@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.modules.community.models import community_members
 
 from app import db
 
@@ -16,6 +17,8 @@ class User(db.Model, UserMixin):
     data_sets = db.relationship('DataSet', backref='user', lazy=True)
     profile = db.relationship('UserProfile', backref='user', uselist=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
+
+    communities = db.relationship('Community', secondary=community_members, back_populates='members')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
