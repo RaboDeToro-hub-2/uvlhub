@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, flash, url_for, request
 from flask_login import current_user, login_user, logout_user
 
 from authlib.integrations.base_client.errors import MismatchingStateError
@@ -26,11 +26,12 @@ def show_signup_form():
 
         try:
             user = authentication_service.create_with_profile(**form.data)
+            authentication_service.send_confirmation_email(user.email)
+            flash("Email confirmation", "info")
+
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f'Error creating user: {exc}')
 
-        # Log user
-        login_user(user, remember=True)
         return redirect(url_for('public.index'))
 
     return render_template("auth/signup_form.html", form=form)
@@ -54,6 +55,18 @@ def login():
 @auth_bp.route('/logout')
 def logout():
     logout_user()
+    return redirect(url_for('public.index'))
+
+
+@auth_bp.route("/confirm_user/<token>", methods=["GET"])
+def confirm_user(token):
+    try:
+        user = authentication_service.confirm_user_with_token(token)
+    except Exception as exc:
+        flash(exc.args[0], "danger")
+        return redirect(url_for("auth.show_signup_form"))
+
+    login_user(user, remember=True)
     return redirect(url_for('public.index'))
 
 
