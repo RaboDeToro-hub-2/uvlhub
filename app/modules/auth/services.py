@@ -2,7 +2,6 @@ import os
 
 from flask import current_app, url_for
 
-from flask import current_app
 from flask_login import login_user, current_user
 from itsdangerous import BadTimeSignature, SignatureExpired, URLSafeTimedSerializer
 
