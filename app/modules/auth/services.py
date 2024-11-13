@@ -1,10 +1,14 @@
 import os
 
 from flask import current_app, url_for
+
+from flask import current_app
 from flask_login import login_user, current_user
 from itsdangerous import BadTimeSignature, SignatureExpired, URLSafeTimedSerializer
 
 from app import mail_service
+from authlib.integrations.flask_client import OAuth
+
 from app.modules.auth.models import User
 from app.modules.auth.repositories import UserRepository
 from app.modules.profile.models import UserProfile
@@ -21,6 +25,23 @@ class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
+        self.oauth, self.github = self.configure_oauth(current_app)
+
+    def configure_oauth(self, app):
+        oauth = OAuth(app)
+        github = oauth.register(
+            name='github',
+            api_base_url='https://api.github.com/',
+            client_id=os.getenv('GITHUB_CLIENT_ID'),
+            client_secret=os.getenv('GITHUB_CLIENT_SECRET'),
+            authorize_url='https://github.com/login/oauth/authorize',
+            authorize_params=None,
+            access_token_url='https://github.com/login/oauth/access_token',
+            access_token_params=None,
+            refresh_token_url=None,
+            client_kwargs={'scope': 'user:email'}
+        )
+        return oauth, github
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
@@ -117,3 +138,20 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+    def login_from_github(self, user_info) -> User | str:
+        email = user_info["email"]
+        if email is None:
+            return None, "Ensure your email is public in your GitHub account"
+        user = self.repository.get_by_email(email)
+        if user is None:
+            # Generate a random password. It should be notified to the user
+            password = User.generate_password()
+            user = self.create_with_profile(
+                email=email,
+                password=password,
+                name=user_info["name"] or user_info["login"],
+                surname=user_info["name"] or user_info["login"]
+            )
+        login_user(user, remember=True)
+        return user, None
