@@ -20,13 +20,18 @@ def list_communities():
 @community_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_community():
+    
     form = CommunityForm()
     if form.validate_on_submit():
         new_community = Community(
             name=form.name.data,
             description=form.description.data,
         )
-        
+        # To move to the service layer
+        existing_community = Community.query.filter_by(name=form.name.data).first()
+        if existing_community:
+            flash('A community with this name already exists.', 'danger')
+            return redirect(url_for('community.create_community'))
         db.session.add(new_community)
         db.session.commit()
         

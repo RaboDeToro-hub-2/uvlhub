@@ -23,7 +23,8 @@ def upgrade():
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('description', sa.String(length=500), nullable=True),
     sa.Column('creationDate', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('community_members',
     sa.Column('community_id', sa.Integer(), nullable=False),
