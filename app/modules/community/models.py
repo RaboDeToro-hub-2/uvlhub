@@ -13,8 +13,8 @@ community_members = db.Table(
 class Community(db.Model):
     __tablename__ = 'community'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(500), nullable=True)
+    name = db.Column(db.String(32), nullable=False, unique=True)
+    description = db.Column(db.String(128), nullable=True)
     creationDate = db.Column(db.DateTime, default=datetime.utcnow)
 
     members = db.relationship('User', secondary=community_members, back_populates='communities')    
