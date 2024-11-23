@@ -15,6 +15,7 @@ class FakenodoRepository(BaseRepository):
 
     def create_deposition(self, data):
         fakenodo = Fakenodo()
+        fakenodo.conceptrecid = self._hash_conceptrecid()
         metadata = self.create_metadata(data.get("metadata"))
         fakenodo.fakenodo_metadata = metadata
         self.session.add(fakenodo)
@@ -57,3 +58,6 @@ class FakenodoRepository(BaseRepository):
         fakenodo_creator.orcid = data.get("orcid")
 
         return fakenodo_creator
+
+    def _hash_conceptrecid(self):
+        return hash(datetime.now())%2_000_000_000

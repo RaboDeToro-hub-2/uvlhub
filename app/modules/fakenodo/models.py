@@ -3,6 +3,7 @@ from app import db
 
 class Fakenodo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    conceptrecid = db.Column(db.Integer, nullable=False)
     fakenodo_metadata = db.relationship('FakenodoMetadata', backref='fakenodo', uselist=False, lazy=False)
     files = db.relationship('FakenodoFile', backref='fakenodo', lazy=True)
 
@@ -12,6 +13,7 @@ class Fakenodo(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "conceptrecid": self.conceptrecid,
             "metadata": self.fakenodo_metadata.to_dict(),
             "files": [file.to_dict() for file in self.files]
         }
