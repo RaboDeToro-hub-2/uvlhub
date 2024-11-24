@@ -60,4 +60,4 @@ class FakenodoRepository(BaseRepository):
         return fakenodo_creator
 
     def _hash_conceptrecid(self):
-        return hash(datetime.now())%2_000_000_000
+        return hash(datetime.now()) % 2_000_000_000
