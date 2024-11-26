@@ -11,15 +11,20 @@ def index():
     return [d.to_dict() for d in data], 200
 
 
+@fakenodo_bp.route('/fakenodo', methods=['POST'])
+def create_deposition():
+    data = request.get_json()
+    return fakenodo_service.create_deposition(data).to_dict(), 201
+
+
 @fakenodo_bp.route('/fakenodo/<deposition_id>', methods=['GET'])
 def get_deposition(deposition_id):
     return fakenodo_service.get_deposition(deposition_id).to_dict()
 
 
-@fakenodo_bp.route('/fakenodo', methods=['POST'])
-def create_deposition():
-    data = request.get_json()
-    return fakenodo_service.create_deposition(data).to_dict(), 201
+@fakenodo_bp.route('/fakenodo/<deposition_id>', methods=['DELETE'])
+def delete_deposition(deposition_id):
+    return fakenodo_service.delete_deposition(deposition_id).to_dict(), 204
 
 
 @fakenodo_bp.route('/fakenodo/<deposition_id>/files', methods=['POST'])
