@@ -3,7 +3,7 @@ from app import db
 from app.modules.community.forms import CommunityForm
 from app.modules.community.models import Community
 from app.modules.community import community_bp
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 
 @community_bp.route('/list', methods=["GET", "POST"])
@@ -36,6 +36,25 @@ def create_community():
         return redirect(url_for('public.index'))
 
     return render_template("community/create.html", form=form)
+
+@community_bp.route('/join/<int:community_id>', methods=['POST'])
+@login_required
+def join_community(community_id):
+    community = Community.query.get(community_id)
+    
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.list_communities'))
+
+    if community in current_user.communities:
+        flash('You are already a member of this community.', 'info')
+        return redirect(url_for('community.list_communities'))
+
+    current_user.communities.append(community)
+    db.session.commit()
+    
+    flash(f'You have successfully joined the community: {community.name}', 'success')
+    return redirect(url_for('community.list_communities'))
 
 @community_bp.route('/view/<int:community_id>', methods=["GET"])
 @login_required
