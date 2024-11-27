@@ -9,10 +9,8 @@ from flask_login import login_required
 @community_bp.route('/list', methods=["GET", "POST"])
 @login_required
 def list_communities():
-    # Obtener todas las comunidades de la base de datos
     communities = Community.query.all()
 
-    # Renderizar la plantilla con las comunidades
     return render_template('community/list_communities.html', communities=communities)
 
 
@@ -38,3 +36,16 @@ def create_community():
         return redirect(url_for('public.index'))
 
     return render_template("community/create.html", form=form)
+
+@community_bp.route('/view/<int:community_id>', methods=["GET"])
+@login_required
+def view_community(community_id):
+    """Displays details of a specific community."""
+    community = Community.query.get(community_id)
+
+    if not community:
+        flash('Community not found!', 'danger')
+        return redirect(url_for('community.list_communities'))
+
+    return render_template('community/view_community.html', community=community)
+
