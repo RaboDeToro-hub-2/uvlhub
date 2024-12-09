@@ -24,7 +24,7 @@ class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
-        self.oauth, self.github = self.configure_oauth(current_app)
+        self.oauth, self.github, self.google = self.configure_oauth(current_app)
 
     def configure_oauth(self, app):
         oauth = OAuth(app)
@@ -40,7 +40,18 @@ class AuthenticationService(BaseService):
             refresh_token_url=None,
             client_kwargs={'scope': 'user:email'}
         )
-        return oauth, github
+        google = oauth.register(
+            name='google',
+            client_id=os.getenv('GOOGLE_CLIENT_ID'),
+            client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+            api_base_url='https://www.googleapis.com/oauth2/v2/',
+            authorize_url='https://accounts.google.com/o/oauth2/auth',
+            access_token_url='https://oauth2.googleapis.com/token',
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'},
+            jwks_uri='https://www.googleapis.com/oauth2/v3/certs'
+        )
+        return oauth, github, google
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
@@ -154,3 +165,25 @@ class AuthenticationService(BaseService):
             )
         login_user(user, remember=True)
         return user, None
+    
+    def login_from_google(self, user_info):
+        email = user_info.get("email")
+        if not email:
+            return None, "Email is required for Google login"
+
+        # Check if user exists in the database
+        user = self.repository.get_by_email(email)
+        if user is None:
+            # Generate a random password for the new user
+            password = User.generate_password()
+            user = self.create_with_profile(
+                email=email,
+                password=password,
+                name=user_info.get("given_name",user_info.get("name","Google User")),
+                surname=user_info.get("family_name", "")
+            )
+
+        # Log the user in
+        login_user(user, remember=True)
+        return user, None
+
