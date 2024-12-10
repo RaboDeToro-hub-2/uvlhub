@@ -172,7 +172,7 @@ class AuthenticationService(BaseService):
             return None, "Email is required for Google login"
 
         # Check if user exists in the database
-        user = self.repository.get_by_email(email)
+        user = self.repository.get_by_google(email)
         if user is None:
             # Generate a random password for the new user
             password = User.generate_password()
