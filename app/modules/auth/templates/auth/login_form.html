@@ -86,8 +86,15 @@
                             <a class="oauth-button" href="{{ url_for('auth.login_with_github') }}">
                                 <img id="login-github" src="{{ url_for('static', filename='img/logos/github-mark.svg') }}" alt="Login with GitHub"></img>
                             </a>
-                        </div>                           
+                        </div>
+                        <div class="col-auto mt-3">
+                            <a class="oauth-button" href="{{ url_for('auth.login_with_google') }}">
+                                <img id="login-google" src="{{ url_for('static', filename='img/logos/google-logo.svg') }}" alt="Login with Google"></img>
+                            </a>
+                        </div>                               
                     </div>
+                    
+                
                 </form>         
     </div>
 </div>
