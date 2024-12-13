@@ -165,7 +165,7 @@ class AuthenticationService(BaseService):
             )
         login_user(user, remember=True)
         return user, None
-    
+
     def login_from_google(self, user_info):
         email = user_info.get("email")
         if not email:
@@ -179,11 +179,10 @@ class AuthenticationService(BaseService):
             user = self.create_with_profile(
                 email=email,
                 password=password,
-                name=user_info.get("given_name",user_info.get("name","Google User")),
+                name=user_info.get("given_name", user_info.get("name", "Google User")),
                 surname=user_info.get("family_name", "")
             )
 
         # Log the user in
         login_user(user, remember=True)
         return user, None
-

@@ -5,7 +5,6 @@ from authlib.integrations.base_client.errors import MismatchingStateError
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import SignupForm, LoginForm
-from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.services import UserProfileService
 
@@ -96,10 +95,12 @@ def login_with_github_authorized():
 
     return render_template("auth/login_form.html", form=form, error=error)
 
+
 @auth_bp.route('/login-with-google', methods=['GET'])
 def login_with_google():
     callback = url_for('auth.login_with_google_callback', _external=True)
     return authentication_service.google.authorize_redirect(callback)
+
 
 @auth_bp.route('/auth/google/callback', methods=['GET'])
 def login_with_google_callback():
