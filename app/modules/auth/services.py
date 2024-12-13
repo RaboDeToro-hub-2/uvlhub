@@ -201,8 +201,6 @@ class AuthenticationService(BaseService):
                 current_app.logger.error(f"Error al crear el usuario con ORCID: {e}")
                 raise
 
-                
-
         # Iniciar sesión con el usuario (existente o recién creado)
         if user:
             login_user(user, remember=True)
