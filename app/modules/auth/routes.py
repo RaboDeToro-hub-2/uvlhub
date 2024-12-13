@@ -94,3 +94,29 @@ def login_with_github_authorized():
         return redirect(url_for('public.index'))
 
     return render_template("auth/login_form.html", form=form, error=error)
+
+
+@auth_bp.route('/login-with-google', methods=['GET'])
+def login_with_google():
+    callback = url_for('auth.login_with_google_callback', _external=True)
+    return authentication_service.google.authorize_redirect(callback)
+
+
+@auth_bp.route('/auth/google/callback', methods=['GET'])
+def login_with_google_callback():
+    try:
+        token = authentication_service.google.authorize_access_token()
+    except MismatchingStateError:
+        return render_template('400.html')
+
+    form = LoginForm()
+    if token is None:
+        error = 'Access token not provided'
+        return render_template("auth/login_form.html", form=form, error=error)
+
+    user_info = authentication_service.google.get('userinfo').json()
+    user, error = authentication_service.login_from_google(user_info)
+    if user is not None:
+        return redirect(url_for('public.index'))
+
+    return render_template("auth/login_form.html", form=form, error=error)
