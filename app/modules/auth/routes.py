@@ -95,10 +95,12 @@ def login_with_github_authorized():
 
     return render_template("auth/login_form.html", form=form, error=error)
 
+
 @auth_bp.route('/login-with-orcid', methods=['GET'])
 def login_with_orcid():
     callback = url_for('auth.login_with_orcid_authorized', _external=True)
     return authentication_service.orcid.authorize_redirect(callback)
+
 
 @auth_bp.route('/login-with-orcid/authorized', methods=['GET'])
 def login_with_orcid_authorized():
@@ -126,6 +128,3 @@ def login_with_orcid_authorized():
         return redirect(url_for('public.index'))
 
     return render_template("auth/login_form.html", form=LoginForm(), error=error)
-
-
-

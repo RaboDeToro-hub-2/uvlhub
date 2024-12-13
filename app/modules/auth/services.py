@@ -43,7 +43,7 @@ class AuthenticationService(BaseService):
             client_kwargs={'scope': 'user:email'}
         )
         return oauth, github
-    
+
     def configure_oauth_orcid(self, app):
         oauth = OAuth(app)
         orcid = oauth.register(
@@ -53,8 +53,9 @@ class AuthenticationService(BaseService):
             client_secret=os.getenv('ORCID_CLIENT_SECRET'),
             authorize_url='https://orcid.org/oauth/authorize',
             access_token_url='https://orcid.org/oauth/token',
-            client_kwargs={'scope': '/authenticate email',
-            'token_endpoint_auth_method': 'client_secret_post'}
+            client_kwargs={
+                'scope': '/authenticate email',
+                'token_endpoint_auth_method': 'client_secret_post'}
         )
         return oauth, orcid
 
@@ -170,7 +171,7 @@ class AuthenticationService(BaseService):
             )
         login_user(user, remember=True)
         return user, None
-    
+
     def login_from_orcid(self, user_info):
         orcid_id = user_info.get("sub")
         if orcid_id is None:
@@ -179,7 +180,6 @@ class AuthenticationService(BaseService):
         given_name = user_info.get("given_name", "Usuario ORCID")
         family_name = user_info.get("family_name", f"ORCID-{orcid_id.split('-')[-1]}")
         email = f"{orcid_id}@orcid.org"
-
 
         # Verificar si el usuario ya existe por correo electrónico
         user = self.repository.get_by_orcid_id(orcid_id)
@@ -198,7 +198,10 @@ class AuthenticationService(BaseService):
                 self.repository.session.commit()
             except IntegrityError as e:
                 self.repository.session.rollback()  # Revertir la transacción
-                user = self.repository.get_by_email(email)
+                current_app.logger.error(f"Error al crear el usuario con ORCID: {e}")
+                raise
+
+                
 
         # Iniciar sesión con el usuario (existente o recién creado)
         if user:
