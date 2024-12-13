@@ -193,8 +193,9 @@ class AuthenticationService(BaseService):
                     password=password,
                     name=given_name,
                     surname=family_name,
-                    orcid_id=orcid_id
                 )
+                user.orcid_id = orcid_id
+                self.repository.session.commit()
             except IntegrityError as e:
                 self.repository.session.rollback()  # Revertir la transacción
                 user = self.repository.get_by_email(email)
@@ -205,4 +206,3 @@ class AuthenticationService(BaseService):
             return user, None
         else:
             return None, "No se pudo completar el inicio de sesión."
-
