@@ -19,3 +19,6 @@ class UserRepository(BaseRepository):
 
     def get_by_email(self, email: str, active: bool = True):
         return self.model.query.filter_by(email=email, active=active).first()
+
+    def get_by_orcid_id(self, orcid_id):
+        return self.session.query(User).filter_by(orcid_id=orcid_id).first()

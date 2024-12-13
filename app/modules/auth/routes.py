@@ -94,3 +94,37 @@ def login_with_github_authorized():
         return redirect(url_for('public.index'))
 
     return render_template("auth/login_form.html", form=form, error=error)
+
+
+@auth_bp.route('/login-with-orcid', methods=['GET'])
+def login_with_orcid():
+    callback = url_for('auth.login_with_orcid_authorized', _external=True)
+    return authentication_service.orcid.authorize_redirect(callback)
+
+
+@auth_bp.route('/login-with-orcid/authorized', methods=['GET'])
+def login_with_orcid_authorized():
+    try:
+        token = authentication_service.orcid.authorize_access_token()
+        print(f"Token recibido: {token}")
+    except Exception as e:
+        print(f"Error al autorizar el token de ORCID: {e}")
+        return render_template("auth/login_form.html", form=LoginForm(), error="Error al autorizar con ORCID")
+
+    if token is None:
+        error = 'Access token not provided'
+        return render_template("auth/login_form.html", form=LoginForm(), error=error)
+
+    try:
+        response = authentication_service.orcid.get('https://orcid.org/oauth/userinfo')
+        print(f"Respuesta completa de ORCID: {response.text}")
+        user_info = response.json()
+    except Exception as e:
+        print(f"Error al procesar la respuesta de ORCID: {e}")
+        user_info = {}
+
+    user, error = authentication_service.login_from_orcid(user_info)
+    if user is not None:
+        return redirect(url_for('public.index'))
+
+    return render_template("auth/login_form.html", form=LoginForm(), error=error)

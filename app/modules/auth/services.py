@@ -14,6 +14,7 @@ from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+from sqlalchemy.exc import IntegrityError
 
 
 class AuthenticationService(BaseService):
@@ -25,6 +26,7 @@ class AuthenticationService(BaseService):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
         self.oauth, self.github = self.configure_oauth(current_app)
+        self.orcid, self.orcid = self.configure_oauth_orcid(current_app)
 
     def configure_oauth(self, app):
         oauth = OAuth(app)
@@ -41,6 +43,21 @@ class AuthenticationService(BaseService):
             client_kwargs={'scope': 'user:email'}
         )
         return oauth, github
+
+    def configure_oauth_orcid(self, app):
+        oauth = OAuth(app)
+        orcid = oauth.register(
+            name='orcid',
+            api_base_url='https://orcid.org/',
+            client_id=os.getenv('ORCID_CLIENT_ID'),
+            client_secret=os.getenv('ORCID_CLIENT_SECRET'),
+            authorize_url='https://orcid.org/oauth/authorize',
+            access_token_url='https://orcid.org/oauth/token',
+            client_kwargs={
+                'scope': '/authenticate email',
+                'token_endpoint_auth_method': 'client_secret_post'}
+        )
+        return oauth, orcid
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
@@ -154,3 +171,39 @@ class AuthenticationService(BaseService):
             )
         login_user(user, remember=True)
         return user, None
+
+    def login_from_orcid(self, user_info):
+        orcid_id = user_info.get("sub")
+        if orcid_id is None:
+            return None, "No se pudo obtener el ORCID ID."
+
+        given_name = user_info.get("given_name", "Usuario ORCID")
+        family_name = user_info.get("family_name", f"ORCID-{orcid_id.split('-')[-1]}")
+        email = f"{orcid_id}@orcid.org"
+
+        # Verificar si el usuario ya existe por correo electrónico
+        user = self.repository.get_by_orcid_id(orcid_id)
+
+        if user is None:
+            try:
+                # Crear un nuevo usuario si no existe
+                password = User.generate_password()
+                user = self.create_with_profile(
+                    email=email,
+                    password=password,
+                    name=given_name,
+                    surname=family_name,
+                )
+                user.orcid_id = orcid_id
+                self.repository.session.commit()
+            except IntegrityError as e:
+                self.repository.session.rollback()  # Revertir la transacción
+                current_app.logger.error(f"Error al crear el usuario con ORCID: {e}")
+                raise
+
+        # Iniciar sesión con el usuario (existente o recién creado)
+        if user:
+            login_user(user, remember=True)
+            return user, None
+        else:
+            return None, "No se pudo completar el inicio de sesión."
