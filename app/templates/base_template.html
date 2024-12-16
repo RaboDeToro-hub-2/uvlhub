@@ -144,6 +144,16 @@ chico sundermann">
                         </a>
                     </li>
 
+                    <li class="sidebar-header">
+                        Notifications
+                    </li>
+
+                    <li class="sidebar-item {{ 'active' if request.endpoint == 'notification.list_notifications' else '' }}">
+                        <a class="sidebar-link" href="{{ url_for('notification.list_notifications') }}">
+                            <i class="align-middle" data-feather="list"></i> <span class="align-middle">Show Notifications</span>
+                        </a>
+                    </li>
+
                 {% endif %}
 
             </ul>

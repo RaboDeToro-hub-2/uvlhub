@@ -6,6 +6,7 @@ import tempfile
 import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
+from app import db
 
 from flask import (
     redirect,
@@ -33,6 +34,7 @@ from app.modules.dataset.services import (
     DOIMappingService
 )
 from app.modules.zenodo.services import ZenodoService
+from app.modules.notification.models import Notification
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +152,21 @@ def upload():
         file.save(file_path)
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+    communities = current_user.communities  
+
+    if communities:
+        for community in communities:
+            for member in community.members:
+                if member.id != current_user.id:
+                    notification = Notification(
+                        message=f"{current_user.email} uploaded a new dataset: {new_filename}.",
+                        user_id=member.id,
+                        community_id=community.id
+                    )
+                    db.session.add(notification)
+
+        db.session.commit()
 
     return (
         jsonify(
